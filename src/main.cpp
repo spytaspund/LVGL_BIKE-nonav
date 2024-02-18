@@ -2,6 +2,7 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <SPI.h>
+#include <EEPROM.h>
 #include <TFT_eSPI.h> // Hardware-specific library
 #include <lvgl.h>
 #include "gui/ui.h"
@@ -16,14 +17,20 @@ void IRAM_ATTR onTimer();
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p);
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data);
 static void change_light1(lv_event_t * e);
+void sens();
 
 void timinit();
 
 #define FRONT_LIGHT_PIN 13
+#define HALL_SENSOR_PIN 12
+#define WHEEL_LENGTH 2
 
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 
 bool light1Bool = false;
+float DIST = 0;
+float SPEED = 0;
+unsigned long lastturn, time_press;
 
 void setup() {
   Serial.begin(115200);
@@ -58,17 +65,26 @@ void setup() {
   /* Initialize spiffs file system*/
   SPIFFS.begin();
   lv_fs_stdio_init();
+  DIST=(float)EEPROM.read(0)/10.0;
 
   /* Configuring GPIO*/
   pinMode(FRONT_LIGHT_PIN, OUTPUT);
+  attachInterrupt(HALL_SENSOR_PIN, sens, RISING);
 
   /* Final settings*/
   ui_init();
   lv_obj_add_event_cb(ui_Light_Switch_1, change_light1, LV_EVENT_ALL, NULL);
+  //lv_arc_set_value(ui_Speedometer_Arc, 15);
 }
 
 void loop() {
   lv_timer_handler();
+  if ((millis()-lastturn)>2000){ //если сигнала нет больше 2 секунды
+    SPEED=0;  //считаем что SPEED 0
+    EEPROM.write(0,(float)DIST*10.0); //записываем DIST во внутреннюю память. Сделал так хитро, потому что внутренняя память не любит частой перезаписи. Также *10, чтобы сохранить десятую долю
+  }
+  lv_arc_set_value(ui_Speedometer_Arc, (int)floor(SPEED));
+  lv_label_set_text(ui_Speedometer_Label, String((int)floor(SPEED)).c_str());
   delay(5);
 }
 
@@ -79,6 +95,15 @@ static void change_light1(lv_event_t * e){
     digitalWrite(FRONT_LIGHT_PIN, light1Bool);
   }
 }
+
+void sens() {
+  if (millis()-lastturn > 80) {  //защита от случайных измерений (основано на том, что велосипед не будет ехать быстрее 120 кмч)
+    SPEED = WHEEL_LENGTH / ((float)(millis() - lastturn) / 1000) * 3.6;  //расчет скорости, км/ч
+    lastturn = millis();  //запомнить время последнего оборота
+    DIST = DIST + WHEEL_LENGTH / 1000;  //прибавляем длину колеса к дистанции при каждом обороте оного
+  }
+}
+
 void IRAM_ATTR onTimer()
 {
   lv_tick_inc(10);
