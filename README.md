@@ -17,3 +17,14 @@ Let's start with the display (ILI9341):
 | T_IRQ       | Not connected|
 | T_D0        | D19       |
 | T_DIN       | D23       |
+| T_CS        | D21       |
+| T_CLK       | D18       |
+| SD0 (MISO)  | Not Connected|
+| LED         | 3v3       |
+| SCK         | D18       |
+| SDI (MOSI)  | D23       |
+| DC          | D2        |
+| RESET       | D4        |
+| CS          | D15       |
+| GND         | GND       |
+| VCC         | 3v3       |
