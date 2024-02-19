@@ -28,3 +28,21 @@ Let's start with the display (ILI9341):
 | CS          | D15       |
 | GND         | GND       |
 | VCC         | 3v3       |
+
+Then, the first light:
+
+| Relay pin | ESP32 pin |
+|-----------|----------:|
+| +         | Vin (5v)  |
+| -         | GND       |
+| S (signal)| D13       |
+
+And finally the hall sensor:
+
+| Sensor pin | ESP32 pin |
+|------------|----------:|
+| +          | 3v3       |
+| -          | GND       |
+| S (signal) | D12       |
+
+In future there will be battery control, maybe navigation and bluetooth/mp3 playing.
