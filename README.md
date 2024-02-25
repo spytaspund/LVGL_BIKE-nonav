@@ -1,5 +1,7 @@
 # LVGL-BIKE
 
+![Arduino](https://img.shields.io/badge/-Arduino-00979D?style=for-the-badge&logo=Arduino&logoColor=white) ![Espressif](https://img.shields.io/badge/espressif-E7352C.svg?style=for-the-badge&logo=espressif&logoColor=white)
+
 *This is NO-NAV version. Here is no navigation system, but other features are present (I guess)!*
 
 LVGL-BIKE (not final project name) is a project that replicates bike computers with nice interface by lvgl and endless modifications and improvments by esp32. 
