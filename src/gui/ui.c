@@ -25,8 +25,34 @@ lv_obj_t *ui_Light_Switch_2;
 lv_obj_t *ui_Speedometer;
 lv_obj_t *ui_Speedometer_Arc;
 lv_obj_t *ui_Speedometer_Label;
-lv_obj_t *ui_Back_Tab;
-lv_obj_t *ui_Back_Icon;
+lv_obj_t *ui_Dock;
+void ui_event_RoadApp( lv_event_t * e);
+lv_obj_t *ui_RoadApp;
+lv_obj_t *ui_RAppLabel;
+lv_obj_t *ui_SettingsApp;
+lv_obj_t *ui_SAppLabel;
+lv_obj_t *ui_NaviApp;
+lv_obj_t *ui_NAppLabel;
+lv_obj_t *ui_ClockApp;
+lv_obj_t *ui_CAppLabel;
+
+
+// SCREEN: ui_Screen2
+void ui_Screen2_screen_init(void);
+lv_obj_t *ui_Screen2;
+lv_obj_t *ui_Speedometer2;
+lv_obj_t *ui_Speedometer_Arc1;
+lv_obj_t *ui_Speedometer_Label1;
+lv_obj_t *ui_Kmh_label;
+lv_obj_t *ui_Distance;
+lv_obj_t *ui_Dist_label;
+lv_obj_t *ui_Dist_value;
+void ui_event_Button1( lv_event_t * e);
+lv_obj_t *ui_Button1;
+lv_obj_t *ui_Road_back_label;
+lv_obj_t *ui_Clock_widget;
+lv_obj_t *ui_Hours;
+lv_obj_t *ui_Minutes;
 lv_obj_t *ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -40,6 +66,18 @@ lv_obj_t *ui____initial_actions0;
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
+void ui_event_RoadApp( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_CLICKED) {
+      _ui_screen_change( &ui_Screen2, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, &ui_Screen2_screen_init);
+}
+}
+void ui_event_Button1( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_CLICKED) {
+      _ui_screen_change( &ui_Screen1, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_Screen1_screen_init);
+}
+}
 
 ///////////////////// SCREENS ////////////////////
 
@@ -49,6 +87,7 @@ lv_disp_t *dispp = lv_disp_get_default();
 lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
 lv_disp_set_theme(dispp, theme);
 ui_Screen1_screen_init();
+ui_Screen2_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
 lv_disp_load_scr( ui_Screen1);
 }

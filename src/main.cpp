@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include <FS.h>
-#include <SPIFFS.h>
+#include "FS.h"
+#include "SPIFFS.h"
 #include <SPI.h>
 #include <EEPROM.h>
 #include <TFT_eSPI.h> // Hardware-specific library
@@ -25,12 +25,16 @@ void timinit();
 #define HALL_SENSOR_PIN 12
 #define WHEEL_LENGTH 2
 
+#define I2S_DOUT      22
+#define I2S_BCLK      26
+#define I2S_LRC       25
+
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 
 bool light1Bool = false;
 float DIST = 0;
 float SPEED = 0;
-unsigned long lastturn, time_press;
+unsigned long lastturn;
 
 void setup() {
   Serial.begin(115200);
@@ -63,7 +67,11 @@ void setup() {
   lv_indev_drv_register(&indev_drv);
 
   /* Initialize spiffs file system*/
-  SPIFFS.begin();
+  if(!SPIFFS.begin())
+    {
+      Serial.println("Error accessing microSD card!");
+      while(true); 
+    }
   lv_fs_stdio_init();
   DIST=(float)EEPROM.read(0)/10.0;
 
@@ -77,14 +85,22 @@ void setup() {
   //lv_arc_set_value(ui_Speedometer_Arc, 15);
 }
 
-void loop() {
+void loop() { 
   lv_timer_handler();
+  lv_obj_t* currentScreen = lv_scr_act();
   if ((millis()-lastturn)>2000){ //если сигнала нет больше 2 секунды
     SPEED=0;  //считаем что SPEED 0
     EEPROM.write(0,(float)DIST*10.0); //записываем DIST во внутреннюю память. Сделал так хитро, потому что внутренняя память не любит частой перезаписи. Также *10, чтобы сохранить десятую долю
   }
-  lv_arc_set_value(ui_Speedometer_Arc, (int)floor(SPEED));
-  lv_label_set_text(ui_Speedometer_Label, String((int)floor(SPEED)).c_str());
+  if(currentScreen == ui_Screen1){
+    lv_arc_set_value(ui_Speedometer_Arc, (int)floor(SPEED));
+    lv_label_set_text(ui_Speedometer_Label, String((int)floor(SPEED)).c_str());
+  }
+  if(currentScreen == ui_Screen2){
+    lv_arc_set_value(ui_Speedometer_Arc1, (int)floor(SPEED));
+    lv_label_set_text(ui_Speedometer_Label1, String((int)floor(SPEED)).c_str());
+    lv_label_set_text(ui_Dist_value, (String((int)floor(DIST)) + " km").c_str());
+  }
   delay(5);
 }
 

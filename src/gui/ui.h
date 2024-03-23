@@ -40,8 +40,32 @@ extern lv_obj_t *ui_Light_Switch_2;
 extern lv_obj_t *ui_Speedometer;
 extern lv_obj_t *ui_Speedometer_Arc;
 extern lv_obj_t *ui_Speedometer_Label;
-extern lv_obj_t *ui_Back_Tab;
-extern lv_obj_t *ui_Back_Icon;
+extern lv_obj_t *ui_Dock;
+void ui_event_RoadApp( lv_event_t * e);
+extern lv_obj_t *ui_RoadApp;
+extern lv_obj_t *ui_RAppLabel;
+extern lv_obj_t *ui_SettingsApp;
+extern lv_obj_t *ui_SAppLabel;
+extern lv_obj_t *ui_NaviApp;
+extern lv_obj_t *ui_NAppLabel;
+extern lv_obj_t *ui_ClockApp;
+extern lv_obj_t *ui_CAppLabel;
+// SCREEN: ui_Screen2
+void ui_Screen2_screen_init(void);
+extern lv_obj_t *ui_Screen2;
+extern lv_obj_t *ui_Speedometer2;
+extern lv_obj_t *ui_Speedometer_Arc1;
+extern lv_obj_t *ui_Speedometer_Label1;
+extern lv_obj_t *ui_Kmh_label;
+extern lv_obj_t *ui_Distance;
+extern lv_obj_t *ui_Dist_label;
+extern lv_obj_t *ui_Dist_value;
+void ui_event_Button1( lv_event_t * e);
+extern lv_obj_t *ui_Button1;
+extern lv_obj_t *ui_Road_back_label;
+extern lv_obj_t *ui_Clock_widget;
+extern lv_obj_t *ui_Hours;
+extern lv_obj_t *ui_Minutes;
 extern lv_obj_t *ui____initial_actions0;
 
 
