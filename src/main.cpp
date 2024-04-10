@@ -18,6 +18,7 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data);
 static void change_light1(lv_event_t * e);
 void sens();
+void loadIcons();
 
 void timinit();
 
@@ -81,7 +82,8 @@ void setup() {
 
   /* Final settings*/
   ui_init();
-  lv_obj_add_event_cb(ui_Light_Switch_1, change_light1, LV_EVENT_ALL, NULL);
+  loadIcons();
+  lv_obj_add_event_cb(ui_Main_Light1_Swt, change_light1, LV_EVENT_ALL, NULL);
   //lv_arc_set_value(ui_Speedometer_Arc, 15);
 }
 
@@ -92,14 +94,14 @@ void loop() {
     SPEED=0;  //считаем что SPEED 0
     EEPROM.write(0,(float)DIST*10.0); //записываем DIST во внутреннюю память. Сделал так хитро, потому что внутренняя память не любит частой перезаписи. Также *10, чтобы сохранить десятую долю
   }
-  if(currentScreen == ui_Screen1){
-    lv_arc_set_value(ui_Speedometer_Arc, (int)floor(SPEED));
-    lv_label_set_text(ui_Speedometer_Label, String((int)floor(SPEED)).c_str());
+  if(currentScreen == ui_MainApp){
+    lv_arc_set_value(ui_Main_Speed_Arc, (int)floor(SPEED));
+    lv_label_set_text(ui_Main_Speed_Label, String((int)floor(SPEED)).c_str());
   }
-  if(currentScreen == ui_Screen2){
-    lv_arc_set_value(ui_Speedometer_Arc1, (int)floor(SPEED));
-    lv_label_set_text(ui_Speedometer_Label1, String((int)floor(SPEED)).c_str());
-    lv_label_set_text(ui_Dist_value, (String((int)floor(DIST)) + " km").c_str());
+  if(currentScreen == ui_RoadApp){
+    lv_arc_set_value(ui_Road_Speed_Arc, (int)floor(SPEED));
+    lv_label_set_text(ui_Road_Speed_Label, String((int)floor(SPEED)).c_str());
+    lv_label_set_text(ui_Road_Dist_Value, (String((int)floor(DIST)) + " km").c_str());
   }
   delay(5);
 }
@@ -118,6 +120,17 @@ void sens() {
     lastturn = millis();  //запомнить время последнего оборота
     DIST = DIST + WHEEL_LENGTH / 1000;  //прибавляем длину колеса к дистанции при каждом обороте оного
   }
+}
+
+void loadIcons(){
+  lv_label_set_text(ui_Main_Charge_Icon,LV_SYMBOL_CHARGE);
+  lv_label_set_text(ui_Main_RoadApp_Icon,LV_SYMBOL_HOME);
+  lv_label_set_text(ui_Main_SetApp_Icon,LV_SYMBOL_SETTINGS);
+  lv_label_set_text(ui_Main_NaviApp_Icon,LV_SYMBOL_GPS);
+  lv_label_set_text(ui_Main_ClockApp_Icon,LV_SYMBOL_BELL);
+  lv_label_set_text(ui_Road_Back_Label,LV_SYMBOL_LEFT);
+  lv_label_set_text(ui_Set_TopBackBtn_Label,LV_SYMBOL_RIGHT);
+  lv_label_set_text(ui_Set_TopIcon,LV_SYMBOL_SETTINGS);
 }
 
 void IRAM_ATTR onTimer()
