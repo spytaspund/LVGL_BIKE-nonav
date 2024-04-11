@@ -91,6 +91,12 @@ extern lv_obj_t * ui_Set_Entry_SetWheelLen_Plus_Label;
 void ui_event_Set_Entry_SetWheelLen_Minus(lv_event_t * e);
 extern lv_obj_t * ui_Set_Entry_SetWheelLen_Minus;
 extern lv_obj_t * ui_Set_Entry_SetWheelLen_Minus_Label;
+extern lv_obj_t * ui_Set_Entry_Debug;
+extern lv_obj_t * ui_Set_Entry_Debug_Label;
+extern lv_obj_t * ui_Set_Entry_Debug_Swt;
+extern lv_obj_t * ui_Set_Entry_Bright;
+extern lv_obj_t * ui_Set_Entry_Bright_Label;
+extern lv_obj_t * ui_Slider1;
 extern lv_obj_t * ui____initial_actions0;
 
 

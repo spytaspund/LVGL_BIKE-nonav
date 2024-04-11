@@ -79,6 +79,12 @@ lv_obj_t * ui_Set_Entry_SetWheelLen_Plus_Label;
 void ui_event_Set_Entry_SetWheelLen_Minus(lv_event_t * e);
 lv_obj_t * ui_Set_Entry_SetWheelLen_Minus;
 lv_obj_t * ui_Set_Entry_SetWheelLen_Minus_Label;
+lv_obj_t * ui_Set_Entry_Debug;
+lv_obj_t * ui_Set_Entry_Debug_Label;
+lv_obj_t * ui_Set_Entry_Debug_Swt;
+lv_obj_t * ui_Set_Entry_Bright;
+lv_obj_t * ui_Set_Entry_Bright_Label;
+lv_obj_t * ui_Slider1;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

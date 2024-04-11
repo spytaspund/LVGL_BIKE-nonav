@@ -96,7 +96,7 @@ void ui_MainApp_screen_init(void)
     lv_obj_set_style_bg_color(ui_Main_Light2_Slider, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Main_Light2_Slider, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_outline_color(ui_Main_Light2_Slider, lv_color_hex(0x000000), LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_outline_opa(ui_Main_Light2_Slider, 125, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_opa(ui_Main_Light2_Slider, 25, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_outline_width(ui_Main_Light2_Slider, 2, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_outline_pad(ui_Main_Light2_Slider, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_Main_Light2_Slider, 2, LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -131,7 +131,7 @@ void ui_MainApp_screen_init(void)
     lv_obj_set_style_bg_color(ui_Main_Light1_Slider, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Main_Light1_Slider, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_outline_color(ui_Main_Light1_Slider, lv_color_hex(0x000000), LV_PART_KNOB | LV_STATE_DEFAULT);
-    lv_obj_set_style_outline_opa(ui_Main_Light1_Slider, 125, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_opa(ui_Main_Light1_Slider, 25, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_outline_width(ui_Main_Light1_Slider, 2, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_outline_pad(ui_Main_Light1_Slider, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_Main_Light1_Slider, 2, LV_PART_KNOB | LV_STATE_DEFAULT);
