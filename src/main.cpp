@@ -7,6 +7,7 @@
 #include <lvgl.h>
 #include "gui/ui.h"
 #include <Preferences.h>
+#include <RtcDS1302.h>
 #include "bitmap.h"
 
 static const uint16_t screenWidth = 320;
@@ -23,6 +24,7 @@ static void change_light1(lv_event_t * e);
 static void start_countdown(lv_event_t * e);
 static void clear_dist(lv_event_t * e);
 static void change_debug(lv_event_t * e);
+String formatTime(int num);
 void sens();
 void loadIcons();
 void timinit();
@@ -34,8 +36,14 @@ void timinit();
 #define I2S_BCLK      26
 #define I2S_LRC       25
 
+#define RTC_DAT       32
+#define RTC_SCLK      5
+#define RTC_RST       33
+
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 Preferences prefs;
+ThreeWire myWire(RTC_DAT,RTC_SCLK,RTC_RST);
+RtcDS1302<ThreeWire> Rtc(myWire);
 
 bool light1Bool = false;
 bool debug = false;
@@ -44,8 +52,9 @@ float DIST = 0;
 float SPEED = 0;
 
 /* Timer variables*/
-unsigned long lastturn;
-unsigned long lastchange;
+unsigned long update_hall;
+unsigned long update_settings;
+unsigned long update_road;
 bool startcounter = false;
 int8_t clearCounter = 0;
 
@@ -56,16 +65,18 @@ void setup() {
   lv_init();
   timinit();
 
-  // Initialise the TFT screen
+  /* Initializing TFT screen... */
   tft.init();
   tft.setRotation(1);
   uint16_t calData[5] = {277, 3440, 435, 3445, 6};
   tft.setTouch(calData);
-      if(debug)tft.setTextSize(2);tft.setTextColor(ILI9341_RED);tft.println("LVGL-BIKE");
-      if(debug)tft.drawBitmap(0,0,bmp_lvgl_bike,128,64,ILI9341_WHITE);
+      if(debug)tft.fillScreen(ILI9341_BLACK);
       if(debug)tft.setTextColor(ILI9341_WHITE);
       if(debug)tft.setTextSize(1);
-      if(debug)tft.fillScreen(ILI9341_BLACK);
+      if(debug)tft.println("Welcome to");
+      if(debug)tft.drawBitmap(0,8,bmp_lvgl_bike,128,64,ILI9341_RED);
+      if(debug)tft.setCursor(0, 74);
+      if(debug)delay(500);
       if(debug)tft.println("[INIT] Started display.");
 
   lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * 10);
@@ -82,6 +93,7 @@ void setup() {
       if(debug)tft.println("[INIT] Registered display driver.");
 
   /*Initialize the (dummy) input device driver*/
+
   static lv_indev_drv_t indev_drv;
   lv_indev_drv_init(&indev_drv);
   indev_drv.type = LV_INDEV_TYPE_POINTER;
@@ -90,6 +102,7 @@ void setup() {
       if(debug)tft.println("[INIT] Registered touch driver.");
 
   /* Initialize spiffs file system*/
+
   if(!SPIFFS.begin())
     {
       Serial.println("Error accessing microSD card!");
@@ -99,16 +112,54 @@ void setup() {
       if(debug)tft.println("[INIT] Initialized SPIFFS filesystem.");
   //lv_fs_stdio_init();
   DIST=prefs.getFloat("dist", 0.0);
-  //DIST=(float)EEPROM.read(0)/10.0;
   WHEEL_LEN=prefs.getFloat("wh-len", 2);
-  //WHEEL_LEN=(float)EEPROM.read(10)/1000;
       if(debug)tft.println("[INIT] Loaded road vaiables.");
+
   /* Configuring GPIO*/
+
   pinMode(FRONT_LIGHT_PIN, OUTPUT);
   attachInterrupt(HALL_SENSOR_PIN, sens, RISING);
       if(debug)tft.println("[INIT] Initialized GPIO.");
       if(debug)tft.println('\n');
+  
+  /* Configuring RTC clock*/
+
+  Rtc.Begin();
+  RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
+  if(debug)tft.println("[INIT] Initializing RTC DS1302.");
+  if(debug)tft.println("[RTC] Compiled time: " + String(__DATE__) + ", " + String(__TIME__));
+
+  /* Checking ALL THE ERRORS (idk why this is so important)*/
+  
+  if (!Rtc.IsDateTimeValid()) {
+        // Common Causes:
+        //    1) first time you ran and the device wasn't running yet
+        //    2) the battery on the device is low or even missing
+      Serial.println("RTC lost confidence in the DateTime!");
+          if(debug)tft.println("[ERROR] RTC lost confidence in the DateTime!");
+      Rtc.SetDateTime(compiled);
+  }
+  if (Rtc.GetIsWriteProtected()){
+      Serial.println("RTC was write protected, enabling writing now");
+          if(debug)tft.println("[WARN] RTC was write protected, bypassing...");
+      Rtc.SetIsWriteProtected(false);
+  }
+  if (!Rtc.GetIsRunning()){
+      Serial.println("RTC was not actively running, starting now");
+          if(debug)tft.println("[WARN] RTC wasn't actively running, starting...");
+      Rtc.SetIsRunning(true);
+  }
+  if (Rtc.GetDateTime() < compiled) {
+      Serial.println("RTC is older than compile time!  (Updating DateTime)");
+          if(debug)tft.println("[ERROR] RTC is older that actual time! Updating...");
+      Rtc.SetDateTime(compiled);
+  }
+  RtcDateTime now = Rtc.GetDateTime();
+  if(debug)tft.println("[RTC] Module time: \n - Date: " + String(now.Day()) + "." + String(now.Month()) + "." + String(now.Year()) + "\n - Time: " + String(now.Hour()) + ":" + String(now.Minute()) + ":" + String(now.Second()));
+  if(debug)tft.println("[INIT] RTC successfully initialized.");
+
   /* Final settings*/
+
       if(debug)tft.println("[CLEAN] All done. Starting ui...");
       if(debug)delay(5000);
   ui_init();
@@ -132,8 +183,8 @@ void setup() {
 
 void loop() { 
   lv_timer_handler();
-  if ((millis()-lastturn)>2000){ //если сигнала нет больше 2 секунды
-    SPEED=0;  //считаем что SPEED 0
+  if ((millis()-update_hall)>2000){ //if there is no signal for 2 seconds
+    SPEED=0;
     prefs.putFloat("dist", DIST); //записываем DIST во внутреннюю память. Сделал так хитро, потому что внутренняя память не любит частой перезаписи. Также *10, чтобы сохранить десятую долю
   }
   handle_apps();
@@ -149,19 +200,57 @@ void handle_apps(){
   }
   /* ROAD */
   if(currentScreen == ui_RoadApp){
-    lv_arc_set_value(ui_Road_Speed_Arc, (int)floor(SPEED));
-    lv_label_set_text(ui_Road_Speed_Label, String((int)floor(SPEED)).c_str());
-    lv_label_set_text(ui_Road_Dist_Value, (String((int)floor(DIST)) + " km").c_str());
+    if((millis() - update_hall) > 500){
+      update_hall = millis();
+      RtcDateTime now = Rtc.GetDateTime();
+      lv_arc_set_value(ui_Road_Speed_Arc, (int)floor(SPEED));
+      lv_label_set_text(ui_Road_Speed_Label, String((int)floor(SPEED)).c_str());
+      lv_label_set_text(ui_Road_Dist_Value, (String((int)floor(DIST)) + " km").c_str());
+      lv_label_set_text(ui_Road_Clock_Hours, formatTime(now.Hour()).c_str());
+      lv_label_set_text(ui_Road_Clock_Minutes, formatTime(now.Minute()).c_str());
+    }
   }
   /* SETTINGS */
   if(currentScreen == ui_SettingsApp){
     if(startcounter){
-      if((millis()-lastchange)>2000){
-        lastchange = millis();
+      if((millis()-update_settings)>2000){
+        update_settings = millis();
         prefs.putFloat("wh-len", WHEEL_LEN);
         startcounter = false;
       }
     }
+    /*                          no elseif? 
+    ⣿⣿⣿⣿⢁⢂⢂⠢⢂⠢⡂⠆⡂⡢⢂⠢⢂⠢⢂⠢⢂⠢⢂⠢⢂⠢⢂⢂⠢⢂⠢⢂⠢⢂⠢⢂⠢⢂⠢⢂⠢⢂⠢⢂⠢⡂⡢⠡
+    ⣿⣿⣿⡏⡢⠡⡂⠕⡐⢅⠢⢑⢐⠄⠕⡈⡢⢑⢐⠅⡢⢑⢐⠡⠡⡊⠔⡐⢅⠢⠡⠡⢊⠄⠕⡐⠡⡁⡪⠠⡑⡐⠅⢅⠊⢔⠨⢌
+    ⣿⣿⣿⢇⠢⡑⢌⠌⡌⡂⣊⠢⡑⠌⢌⢂⠢⡑⠄⢕⢐⠅⡢⠡⡑⡐⢅⢊⠄⡅⢕⠡⡑⡨⡈⡢⢑⢐⢐⠅⡂⡊⢌⠢⠡⡑⢌⢆
+    ⣿⣿⣿⢐⠅⡊⡢⢑⢔⠱⡐⢕⠨⡘⡐⢅⢑⠌⢜⢐⠅⡪⢐⢑⠌⢌⢂⠢⡑⢌⠢⡑⡐⢔⢐⠌⡂⡊⢔⠨⡐⢌⢂⠪⠨⡊⢆⠆
+    ⣿⣿⡇⡢⡑⢅⢊⢆⢕⢅⢕⠡⡑⢌⢌⠢⡑⢌⠢⡢⡑⢌⢢⠡⡑⡑⢌⢌⢌⠢⡑⠔⢌⠢⠢⡑⢌⢂⠅⡊⠔⡡⢂⢕⢑⢜⠰⡑
+    ⣿⣿⢑⠔⢌⢪⢸⠰⡑⢔⢐⢑⢌⢢⢡⠱⡨⠪⡨⠢⡊⡢⡡⡑⡑⡌⠆⢕⢐⠕⢌⢊⠢⡑⡑⢌⢂⠢⡑⠌⡌⠢⡑⢔⢱⢐⠕⡌
+    ⣿⣿⢐⢅⢣⢱⢑⠕⡡⡑⢌⠢⠢⡑⢔⢱⠨⡪⡘⢌⡊⢆⠪⡨⠢⡊⡪⡨⢢⢑⢅⠕⢅⠕⢌⠢⡡⡑⢌⢌⢌⠪⡨⢢⢑⢅⠕⡌
+    ⣿⣿⠢⡣⠣⡱⡐⡱⢐⢌⠢⠡⡃⡪⡘⢔⢱⠨⡊⢆⠪⡪⡘⡌⡪⡸⡐⢕⢱⢨⢢⢑⢅⠕⢅⠕⠔⡌⢆⠢⡢⠱⡨⡢⡱⡘⡌⡪
+    ⣿⠏⢕⢘⢌⠢⡊⢔⠡⠢⡑⠡⢂⢆⢊⠪⡂⢇⠕⡅⡣⡊⢆⠪⡢⠪⡘⢌⢪⠢⡃⡇⡕⡕⡅⡣⡱⢨⠢⡱⡘⡌⡒⡌⡆⡣⡊⢆
+    ⡿⢘⢌⠢⠢⡑⠌⡂⠅⠡⠄⡁⡂⡢⢡⠑⠸⡐⡕⢌⠆⡕⢅⠣⠪⡘⢌⠪⡂⡣⡱⡑⡕⡜⢜⢌⢎⢆⢣⢱⢨⢪⠸⡨⡪⡸⢨⠢
+    ⣧⠂⢀⠁⡁⠄⠁⠄⡀⢂⢐⢐⠔⢌⠢⡑⡈⠨⠨⡂⢇⠪⡂⣃⠣⡑⢅⠣⡑⡌⢆⠕⡌⡪⡊⡎⢆⢣⢱⢑⢕⢜⢜⢌⢆⠕⡅⡣
+    ⣿⣄⠄⢀⠄⠄⢄⠡⡐⡐⢅⠢⡑⢅⠪⡐⢌⠔⡀⠈⠄⡑⠌⡂⠕⠌⡂⠣⠑⢌⠢⡃⡊⡢⠱⡘⡜⢜⢜⢜⢜⢔⠕⡜⡰⡑⢌⢪
+    ⣿⣿⣦⣐⠌⢌⠢⡑⡐⢅⠅⠕⢌⠢⡑⢌⠢⡑⢌⢂⢂⢀⠠⠄⠐⠄⠠⠈⠐⠄⠂⠠⠑⠨⠪⡘⢜⢜⢜⢜⢜⢔⢕⢑⢔⠸⡨⣢
+    ⣿⣿⣿⣿⣷⡥⡑⠌⡌⠢⡑⢅⠕⡑⢌⠢⡑⢌⠢⡑⢔⠡⠢⡨⠠⢈⢀⠄⠈⡀⠈⠠⠈⠨⠐⢅⠕⡜⡜⡜⡜⢔⢑⠔⡂⡣⣵⣿
+    ⣿⣿⣿⣿⣿⣿⣷⣕⠌⠌⡂⠅⡊⠔⡡⡑⢌⠢⠡⡊⠄⢕⠡⡊⢌⢂⠢⡡⡑⡐⢄⠐⡀⠂⠁⠢⡑⡕⡕⡕⢕⠅⢅⢅⣣⣾⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣷⡠⢄⠄⠄⠁⢂⠜⡐⠅⢕⠨⠨⡂⠅⢌⢂⠊⠌⢔⠰⠨⡂⢕⠐⢄⠡⢈⠢⡱⡱⣑⢑⠌⣲⣾⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⡏⡎⡖⠄⠄⢔⠄⠨⡊⢌⢂⢊⢂⢂⠑⠄⠄⠁⠁⠂⠅⡑⢌⠢⡑⢅⠪⠠⡑⡕⡕⡢⡑⡛⢅⠆⣻⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⡿⠋⣎⢂⢀⠄⡈⠄⢨⠨⢂⢂⢂⠂⢄⢢⢣⠁⠄⠄⡀⠄⠨⠐⡨⢐⠔⠡⡑⢜⢜⠜⡀⡂⠌⣐⣴⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⢑⠅⡂⠅⢂⠠⠄⡂⢜⠌⠢⠨⠂⠌⡢⡣⡃⠄⠄⠥⠄⠄⢂⠄⢐⠡⡨⢂⢕⢕⠕⡐⡐⢁⣢⣾⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⡐⢕⢐⠨⡀⡂⡅⡪⢢⠡⡑⡡⠡⢁⠪⡪⡂⡀⡈⢀⠠⢐⢱⠐⡐⡕⡜⡔⡕⡕⡐⣐⣄⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⡏⡢⡡⠱⡨⡢⢣⠑⢅⢂⢂⠢⢁⠂⠄⡁⢃⠢⠐⡀⢐⢁⠅⢔⢱⢱⢕⢽⢸⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⢐⢌⢪⠢⡣⢡⠡⠡⢂⠢⡑⢄⢑⢐⠨⢐⠠⢁⠂⢅⠢⡑⡕⡕⡕⡝⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⡇⡎⢆⠇⢕⢐⢅⢑⠔⡡⠨⡂⠢⡑⢌⢂⠪⡐⠅⡅⠣⡑⢌⠪⡊⣺⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⡟⡌⡎⡪⠪⡨⡢⡢⡱⡨⠢⡑⠌⢌⠢⠡⡂⡑⡈⡂⠪⠨⡨⠢⡑⣵⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⡿⡡⡣⢪⢘⢜⢜⢜⢜⢜⢜⠜⡌⡪⡂⢅⢑⠐⢌⢐⠌⢌⠪⡐⢅⣣⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⡟⡕⡜⡜⡜⡜⣜⢜⢮⢳⢱⢱⢱⠱⡨⢂⢂⠢⠡⡑⡐⢌⠢⡑⡜⣔⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⢧⢣⢣⢣⡣⡫⣎⢯⡪⡇⡇⢇⠣⡑⡐⡐⡐⠌⡂⡢⢊⢔⠱⣘⢬⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⠨⠪⡸⡸⡸⡹⡸⡸⡘⡌⡪⡢⡣⡪⡢⡪⢐⢁⠢⠨⡢⡊⡎⢦⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣏⠌⠔⢌⠪⡘⠌⠢⡱⡸⡸⢜⢎⢮⢪⢪⠢⡑⠨⡊⡢⡣⢣⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⡇⡊⡀⠡⢁⢂⢂⠎⡪⡲⡐⡅⡱⢱⠨⢂⢪⠸⣨⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    */
     switch (clearCounter)
     {
     case 1:
@@ -216,9 +305,9 @@ static void change_debug(lv_event_t * e){
 }
 
 void sens() {
-  if (millis()-lastturn > 80) {  //защита от случайных измерений (основано на том, что велосипед не будет ехать быстрее 120 кмч)
-    SPEED = WHEEL_LEN / ((float)(millis() - lastturn) / 1000) * 3.6;  //расчет скорости, км/ч
-    lastturn = millis();  //запомнить время последнего оборота
+  if (millis()-update_hall > 80) {  //защита от случайных измерений (основано на том, что велосипед не будет ехать быстрее 120 кмч)
+    SPEED = WHEEL_LEN / ((float)(millis() - update_hall) / 1000) * 3.6;  //расчет скорости, км/ч
+    update_hall = millis();  //запомнить время последнего оборота
     DIST = DIST + WHEEL_LEN / 1000;  //прибавляем длину колеса к дистанции при каждом обороте оного
   }
 }
@@ -232,6 +321,11 @@ void loadIcons(){
   lv_label_set_text(ui_Road_Back_Label,LV_SYMBOL_LEFT);
   lv_label_set_text(ui_Set_TopBackBtn_Label,LV_SYMBOL_RIGHT);
   lv_label_set_text(ui_Set_TopIcon,LV_SYMBOL_SETTINGS);
+}
+
+String formatTime(int num){
+  if(num<10) return ("0" + String(num));
+  if(num>=10) return String(num);
 }
 
 void IRAM_ATTR onTimer()
