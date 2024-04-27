@@ -75,6 +75,7 @@ void ui_MainApp_screen_init(void)
     lv_obj_set_x(ui_Main_Light2, -20);
     lv_obj_set_y(ui_Main_Light2, 20);
     lv_obj_set_align(ui_Main_Light2, LV_ALIGN_RIGHT_MID);
+    lv_obj_add_state(ui_Main_Light2, LV_STATE_DISABLED);       /// States
     lv_obj_clear_flag(ui_Main_Light2, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
                       LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
                       LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);     /// Flags
@@ -155,6 +156,7 @@ void ui_MainApp_screen_init(void)
     lv_obj_set_x(ui_Main_Light2_Swt, 113);
     lv_obj_set_y(ui_Main_Light2_Swt, 20);
     lv_obj_set_align(ui_Main_Light2_Swt, LV_ALIGN_TOP_MID);
+    lv_obj_add_state(ui_Main_Light2_Swt, LV_STATE_DISABLED);       /// States
 
     lv_obj_set_style_bg_color(ui_Main_Light2_Swt, lv_color_hex(0xE8C872), LV_PART_INDICATOR | LV_STATE_CHECKED);
     lv_obj_set_style_bg_opa(ui_Main_Light2_Swt, 255, LV_PART_INDICATOR | LV_STATE_CHECKED);
@@ -267,6 +269,7 @@ void ui_MainApp_screen_init(void)
     lv_obj_set_x(ui_Main_NaviApp, -137);
     lv_obj_set_y(ui_Main_NaviApp, 24);
     lv_obj_set_align(ui_Main_NaviApp, LV_ALIGN_CENTER);
+    lv_obj_add_state(ui_Main_NaviApp, LV_STATE_DISABLED);       /// States
     lv_obj_add_flag(ui_Main_NaviApp, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Main_NaviApp, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_radius(ui_Main_NaviApp, 13, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -309,5 +312,6 @@ void ui_MainApp_screen_init(void)
 
     lv_obj_add_event_cb(ui_Main_RoadApp, ui_event_Main_RoadApp, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Main_SetApp, ui_event_Main_SetApp, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Main_ClockApp, ui_event_Main_ClockApp, LV_EVENT_ALL, NULL);
 
 }

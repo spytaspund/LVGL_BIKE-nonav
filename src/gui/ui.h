@@ -50,6 +50,7 @@ extern lv_obj_t * ui_Main_SetApp;
 extern lv_obj_t * ui_Main_SetApp_Icon;
 extern lv_obj_t * ui_Main_NaviApp;
 extern lv_obj_t * ui_Main_NaviApp_Icon;
+void ui_event_Main_ClockApp(lv_event_t * e);
 extern lv_obj_t * ui_Main_ClockApp;
 extern lv_obj_t * ui_Main_ClockApp_Icon;
 // SCREEN: ui_RoadApp
@@ -97,13 +98,28 @@ extern lv_obj_t * ui_Set_Entry_Debug_Swt;
 extern lv_obj_t * ui_Set_Entry_Bright;
 extern lv_obj_t * ui_Set_Entry_Bright_Label;
 extern lv_obj_t * ui_Slider1;
+// SCREEN: ui_ClockApp
+void ui_ClockApp_screen_init(void);
+extern lv_obj_t * ui_ClockApp;
+extern lv_obj_t * ui_Clock_Label;
+void ui_event_Clock_Back_Btn(lv_event_t * e);
+extern lv_obj_t * ui_Clock_Back_Btn;
+extern lv_obj_t * ui_Clock_Back_Btn_Label;
+extern lv_obj_t * ui_Clock_Change_Btn;
+extern lv_obj_t * ui_Clock_Change_Btn_Label;
+extern lv_obj_t * ui_Clock_DarkTheme_Btn;
+extern lv_obj_t * ui_Clock_DarkTheme_Btn_Label;
 extern lv_obj_t * ui____initial_actions0;
 
 
 
 
 
-LV_FONT_DECLARE(ui_font_seven_segment);
+LV_FONT_DECLARE(ui_font_Micro5);
+LV_FONT_DECLARE(ui_font_Sixtyfour);
+LV_FONT_DECLARE(ui_font_Hussar3D);
+LV_FONT_DECLARE(ui_font_TerminalGrotesque);
+LV_FONT_DECLARE(ui_font_DigitalGothic);
 
 
 

@@ -9,6 +9,7 @@
 #include <Preferences.h>
 #include <RtcDS1302.h>
 #include "bitmap.h"
+#include <MFRC522.h>
 
 static const uint16_t screenWidth = 320;
 static const uint16_t screenHeight = 240;
@@ -24,29 +25,35 @@ static void change_light1(lv_event_t * e);
 static void start_countdown(lv_event_t * e);
 static void clear_dist(lv_event_t * e);
 static void change_debug(lv_event_t * e);
+static void change_clock(lv_event_t * e);
 String formatTime(int num);
 void sens();
 void loadIcons();
 void timinit();
 
-#define FRONT_LIGHT_PIN 13
-#define HALL_SENSOR_PIN 12
+#define FRONT_LIGHT_PIN   12
+#define HALL_SENSOR_PIN   35
 
-#define I2S_DOUT      22
-#define I2S_BCLK      26
-#define I2S_LRC       25
+#define I2S_DOUT          22
+#define I2S_BCLK          26
+#define I2S_LRC           25
 
-#define RTC_DAT       32
-#define RTC_SCLK      5
-#define RTC_RST       33
+#define RTC_DAT           32
+#define RTC_SCLK          5
+#define RTC_RST           33
+
+#define RFID_RST          16
+#define RFID_CS           17
 
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 Preferences prefs;
 ThreeWire myWire(RTC_DAT,RTC_SCLK,RTC_RST);
 RtcDS1302<ThreeWire> Rtc(myWire);
+MFRC522 rfid(RFID_CS, RFID_RST);
 
 bool light1Bool = false;
 bool debug = false;
+int8_t clockMode = 0;
 float WHEEL_LEN = 2.007; /* Wheel length in meters, without a dot (x1000)*/
 float DIST = 0;
 float SPEED = 0;
@@ -55,6 +62,7 @@ float SPEED = 0;
 unsigned long update_hall;
 unsigned long update_settings;
 unsigned long update_road;
+unsigned long update_clock;
 bool startcounter = false;
 int8_t clearCounter = 0;
 
@@ -158,26 +166,24 @@ void setup() {
   if(debug)tft.println("[RTC] Module time: \n - Date: " + String(now.Day()) + "." + String(now.Month()) + "." + String(now.Year()) + "\n - Time: " + String(now.Hour()) + ":" + String(now.Minute()) + ":" + String(now.Second()));
   if(debug)tft.println("[INIT] RTC successfully initialized.");
 
+  /* RFID */
+  SPI.begin();
+  rfid.PCD_Init();
+  rfid.PCD_DumpVersionToSerial();
+
   /* Final settings*/
 
       if(debug)tft.println("[CLEAN] All done. Starting ui...");
       if(debug)delay(5000);
   ui_init();
   loadIcons();
-  switch (debug)
-  {
-  case true:
-    lv_obj_add_state(ui_Set_Entry_Debug_Swt, LV_STATE_CHECKED);
-    break;
-  case false:
-    lv_obj_clear_state(ui_Set_Entry_Debug_Swt, LV_STATE_CHECKED);
-  default:
-    break;
-  }
+  if(debug) lv_obj_add_state(ui_Set_Entry_Debug_Swt, LV_STATE_CHECKED);
+  if(!debug) lv_obj_clear_state(ui_Set_Entry_Debug_Swt, LV_STATE_CHECKED);
   lv_obj_add_event_cb(ui_Main_Light1_Swt, change_light1, LV_EVENT_ALL, NULL);
   lv_obj_add_event_cb(ui_Set_Entry_SetWheelLen_Spin, start_countdown, LV_EVENT_ALL, NULL);
   lv_obj_add_event_cb(ui_Set_Entry_ClearDist_Btn, clear_dist, LV_EVENT_ALL, NULL);
   lv_obj_add_event_cb(ui_Set_Entry_Debug_Swt, change_debug, LV_EVENT_ALL, NULL);
+  lv_obj_add_event_cb(ui_Set_Entry_Debug_Swt, change_clock, LV_EVENT_ALL, NULL);
   lv_spinbox_set_value(ui_Set_Entry_SetWheelLen_Spin, WHEEL_LEN*1000);
 }
 
@@ -206,7 +212,7 @@ void handle_apps(){
       lv_arc_set_value(ui_Road_Speed_Arc, (int)floor(SPEED));
       lv_label_set_text(ui_Road_Speed_Label, String((int)floor(SPEED)).c_str());
       lv_label_set_text(ui_Road_Dist_Value, (String((int)floor(DIST)) + " km").c_str());
-      lv_label_set_text(ui_Road_Clock_Hours, formatTime(now.Hour()).c_str());
+      lv_label_set_text(ui_Road_Clock_Hours, String(now.Hour()).c_str());
       lv_label_set_text(ui_Road_Clock_Minutes, formatTime(now.Minute()).c_str());
     }
   }
@@ -273,6 +279,35 @@ void handle_apps(){
       lv_label_set_text(ui_Set_Entry_ClearDist_Label, "Clear distance");
     }
   }
+  /* CLOCK */
+  if(currentScreen == ui_ClockApp){
+    if((millis() - update_clock) > 500){
+      update_clock = millis();
+      RtcDateTime now = Rtc.GetDateTime();
+      lv_style_t *clockStyle;
+      lv_label_set_text(ui_Clock_Label, (String(now.Hour()) + ":" + formatTime(now.Minute())).c_str());
+      if(clockMode > 4) clockMode = 0;
+      switch(clockMode){
+        case 0:
+          lv_style_set_text_font(clockStyle, &ui_font_DigitalGothic);
+          break;
+        case 1:
+          lv_style_set_text_font(clockStyle, &ui_font_TerminalGrotesque);
+          break;
+        case 2:
+          lv_style_set_text_font(clockStyle, &ui_font_Micro5);
+          break;
+        case 3:
+          lv_style_set_text_font(clockStyle, &ui_font_Hussar3D);
+          break;
+        case 4:
+          lv_style_set_text_font(clockStyle, &ui_font_Sixtyfour);
+          break;
+        default:
+          break;
+      }
+    }
+  }
 }
 
 static void change_light1(lv_event_t * e){
@@ -303,6 +338,12 @@ static void change_debug(lv_event_t * e){
     debug = prefs.getBool("debug", false);
   }
 }
+static void change_clock(lv_event_t * e){
+  lv_event_code_t code = lv_event_get_code(e);
+  if(code == LV_EVENT_CLICKED){
+    clockMode++;
+  }
+}
 
 void sens() {
   if (millis()-update_hall > 80) {  //защита от случайных измерений (основано на том, что велосипед не будет ехать быстрее 120 кмч)
@@ -321,6 +362,9 @@ void loadIcons(){
   lv_label_set_text(ui_Road_Back_Label,LV_SYMBOL_LEFT);
   lv_label_set_text(ui_Set_TopBackBtn_Label,LV_SYMBOL_RIGHT);
   lv_label_set_text(ui_Set_TopIcon,LV_SYMBOL_SETTINGS);
+  lv_label_set_text(ui_Clock_Back_Btn_Label, LV_SYMBOL_RIGHT);
+  lv_label_set_text(ui_Clock_Change_Btn_Label, LV_SYMBOL_REFRESH);
+  lv_label_set_text(ui_Clock_DarkTheme_Btn_Label, LV_SYMBOL_IMAGE);
 }
 
 String formatTime(int num){

@@ -127,6 +127,7 @@ void ui_RoadApp_screen_init(void)
     lv_label_set_text(ui_Road_Clock_Hours, "18");
     lv_obj_set_style_text_color(ui_Road_Clock_Hours, lv_color_hex(0x787878), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Road_Clock_Hours, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_Road_Clock_Hours, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Road_Clock_Hours, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Road_Clock_Minutes = lv_label_create(ui_Road_Clock);
@@ -135,7 +136,7 @@ void ui_RoadApp_screen_init(void)
     lv_obj_set_x(ui_Road_Clock_Minutes, -8);
     lv_obj_set_y(ui_Road_Clock_Minutes, -8);
     lv_obj_set_align(ui_Road_Clock_Minutes, LV_ALIGN_BOTTOM_RIGHT);
-    lv_label_set_text(ui_Road_Clock_Minutes, "56");
+    lv_label_set_text(ui_Road_Clock_Minutes, "41");
     lv_obj_set_style_text_font(ui_Road_Clock_Minutes, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_Road_Back_Btn, ui_event_Road_Back_Btn, LV_EVENT_ALL, NULL);

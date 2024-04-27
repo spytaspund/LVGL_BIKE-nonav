@@ -1,10 +1,15 @@
 SET(SOURCES screens/ui_MainApp.c
     screens/ui_RoadApp.c
     screens/ui_SettingsApp.c
+    screens/ui_ClockApp.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
     ui_events.c
-    fonts/ui_font_seven_segment.c)
+    fonts/ui_font_Micro5.c
+    fonts/ui_font_Sixtyfour.c
+    fonts/ui_font_Hussar3D.c
+    fonts/ui_font_TerminalGrotesque.c
+    fonts/ui_font_DigitalGothic.c)
 
 add_library(ui ${SOURCES})
