@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "cmath": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/anb12/OneDrive/Documents/PlatformIO/Projects/LVGL_BIKE-nonav/.pio/libdeps/esp32doit-devkit-v1/lvgl"
 }

@@ -88,17 +88,27 @@ lv_obj_t * ui_Set_Entry_Bright_Label;
 lv_obj_t * ui_Slider1;
 
 
-// SCREEN: ui_ClockApp
-void ui_ClockApp_screen_init(void);
-lv_obj_t * ui_ClockApp;
-lv_obj_t * ui_Clock_Label;
-void ui_event_Clock_Back_Btn(lv_event_t * e);
-lv_obj_t * ui_Clock_Back_Btn;
-lv_obj_t * ui_Clock_Back_Btn_Label;
-lv_obj_t * ui_Clock_Change_Btn;
-lv_obj_t * ui_Clock_Change_Btn_Label;
-lv_obj_t * ui_Clock_DarkTheme_Btn;
-lv_obj_t * ui_Clock_DarkTheme_Btn_Label;
+// SCREEN: ui_GPSApp
+void ui_GPSApp_screen_init(void);
+lv_obj_t * ui_GPSApp;
+void ui_event_GPS_Back_Btn(lv_event_t * e);
+lv_obj_t * ui_GPS_Back_Btn;
+lv_obj_t * ui_GPS_Back_Btn_Label;
+lv_obj_t * ui_GPS_Status_Label;
+lv_obj_t * ui_GPS_Main;
+lv_obj_t * ui_GPS_Main_Sat_Icon;
+lv_obj_t * ui_GPS_Main_Sat_Label;
+lv_obj_t * ui_GPS_Main_Sat_Value;
+lv_obj_t * ui_GPS_Main_Lat_Icon;
+lv_obj_t * ui_GPS_Main_Lat_Label;
+lv_obj_t * ui_GPS_Main_Lat_Value;
+lv_obj_t * ui_GPS_Main_Lon_Icon;
+lv_obj_t * ui_GPS_Main_Lon_Label;
+lv_obj_t * ui_GPS_Main_Lon_Value;
+lv_obj_t * ui_GPS_Main_Time_Icon;
+lv_obj_t * ui_GPS_Main_Time_Label;
+lv_obj_t * ui_GPS_Main_Time_Value;
+lv_obj_t * ui_GPS_Status_Icon;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -133,7 +143,7 @@ void ui_event_Main_ClockApp(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        _ui_screen_change(&ui_ClockApp, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_ClockApp_screen_init);
+        _ui_screen_change(&ui_GPSApp, LV_SCR_LOAD_ANIM_MOVE_TOP, 500, 0, &ui_GPSApp_screen_init);
     }
 }
 void ui_event_Road_Back_Btn(lv_event_t * e)
@@ -168,12 +178,12 @@ void ui_event_Set_Entry_SetWheelLen_Minus(lv_event_t * e)
         _ui_spinbox_step(ui_Set_Entry_SetWheelLen_Spin, -1);
     }
 }
-void ui_event_Clock_Back_Btn(lv_event_t * e)
+void ui_event_GPS_Back_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        _ui_screen_change(&ui_MainApp, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, &ui_MainApp_screen_init);
+        _ui_screen_change(&ui_MainApp, LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 500, 0, &ui_MainApp_screen_init);
     }
 }
 
@@ -188,7 +198,7 @@ void ui_init(void)
     ui_MainApp_screen_init();
     ui_RoadApp_screen_init();
     ui_SettingsApp_screen_init();
-    ui_ClockApp_screen_init();
+    ui_GPSApp_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_MainApp);
 }

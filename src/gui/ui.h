@@ -98,28 +98,38 @@ extern lv_obj_t * ui_Set_Entry_Debug_Swt;
 extern lv_obj_t * ui_Set_Entry_Bright;
 extern lv_obj_t * ui_Set_Entry_Bright_Label;
 extern lv_obj_t * ui_Slider1;
-// SCREEN: ui_ClockApp
-void ui_ClockApp_screen_init(void);
-extern lv_obj_t * ui_ClockApp;
-extern lv_obj_t * ui_Clock_Label;
-void ui_event_Clock_Back_Btn(lv_event_t * e);
-extern lv_obj_t * ui_Clock_Back_Btn;
-extern lv_obj_t * ui_Clock_Back_Btn_Label;
-extern lv_obj_t * ui_Clock_Change_Btn;
-extern lv_obj_t * ui_Clock_Change_Btn_Label;
-extern lv_obj_t * ui_Clock_DarkTheme_Btn;
-extern lv_obj_t * ui_Clock_DarkTheme_Btn_Label;
+// SCREEN: ui_GPSApp
+void ui_GPSApp_screen_init(void);
+extern lv_obj_t * ui_GPSApp;
+void ui_event_GPS_Back_Btn(lv_event_t * e);
+extern lv_obj_t * ui_GPS_Back_Btn;
+extern lv_obj_t * ui_GPS_Back_Btn_Label;
+extern lv_obj_t * ui_GPS_Status_Label;
+extern lv_obj_t * ui_GPS_Main;
+extern lv_obj_t * ui_GPS_Main_Sat_Icon;
+extern lv_obj_t * ui_GPS_Main_Sat_Label;
+extern lv_obj_t * ui_GPS_Main_Sat_Value;
+extern lv_obj_t * ui_GPS_Main_Lat_Icon;
+extern lv_obj_t * ui_GPS_Main_Lat_Label;
+extern lv_obj_t * ui_GPS_Main_Lat_Value;
+extern lv_obj_t * ui_GPS_Main_Lon_Icon;
+extern lv_obj_t * ui_GPS_Main_Lon_Label;
+extern lv_obj_t * ui_GPS_Main_Lon_Value;
+extern lv_obj_t * ui_GPS_Main_Time_Icon;
+extern lv_obj_t * ui_GPS_Main_Time_Label;
+extern lv_obj_t * ui_GPS_Main_Time_Value;
+extern lv_obj_t * ui_GPS_Status_Icon;
 extern lv_obj_t * ui____initial_actions0;
 
 
 
 
 
+LV_FONT_DECLARE(ui_font_DigitalGothic);
+LV_FONT_DECLARE(ui_font_Hussar3D);
 LV_FONT_DECLARE(ui_font_Micro5);
 LV_FONT_DECLARE(ui_font_Sixtyfour);
-LV_FONT_DECLARE(ui_font_Hussar3D);
 LV_FONT_DECLARE(ui_font_TerminalGrotesque);
-LV_FONT_DECLARE(ui_font_DigitalGothic);
 
 
 

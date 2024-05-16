@@ -10,6 +10,8 @@
 #include <RtcDS1302.h>
 #include "bitmap.h"
 #include <MFRC522.h>
+#include <TinyGPSPlus.h>
+#include <SoftwareSerial.h>
 
 static const uint16_t screenWidth = 320;
 static const uint16_t screenHeight = 240;
@@ -27,6 +29,8 @@ static void clear_dist(lv_event_t * e);
 static void change_debug(lv_event_t * e);
 static void change_clock(lv_event_t * e);
 String formatTime(int num);
+void grab_gps();
+void displayInfo();
 void sens();
 void loadIcons();
 void timinit();
@@ -45,11 +49,16 @@ void timinit();
 #define RFID_RST          16
 #define RFID_CS           17
 
+#define GPS_TX            22
+#define GPS_RX            13
+
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight); /* TFT instance */
 Preferences prefs;
 ThreeWire myWire(RTC_DAT,RTC_SCLK,RTC_RST);
 RtcDS1302<ThreeWire> Rtc(myWire);
 MFRC522 rfid(RFID_CS, RFID_RST);
+TinyGPSPlus tgps;
+SoftwareSerial gps(GPS_RX, GPS_TX); // 2 to Tx, 3 unconnected
 
 bool light1Bool = false;
 bool debug = false;
@@ -68,6 +77,7 @@ int8_t clearCounter = 0;
 
 void setup() {
   Serial.begin(115200);
+  gps.begin(9600);
   prefs.begin("lvgl-bike", false);
   debug = prefs.getBool("debug", false);
   lv_init();
@@ -113,7 +123,7 @@ void setup() {
 
   if(!SPIFFS.begin())
     {
-      Serial.println("Error accessing microSD card!");
+      //Serial.println("Error accessing microSD card!");
           if(debug)tft.println("[ERROR] Error accessing SPIFFS filesystem!");
       while(true); 
     }
@@ -143,22 +153,22 @@ void setup() {
         // Common Causes:
         //    1) first time you ran and the device wasn't running yet
         //    2) the battery on the device is low or even missing
-      Serial.println("RTC lost confidence in the DateTime!");
+      //Serial.println("RTC lost confidence in the DateTime!");
           if(debug)tft.println("[ERROR] RTC lost confidence in the DateTime!");
       Rtc.SetDateTime(compiled);
   }
   if (Rtc.GetIsWriteProtected()){
-      Serial.println("RTC was write protected, enabling writing now");
+      //Serial.println("RTC was write protected, enabling writing now");
           if(debug)tft.println("[WARN] RTC was write protected, bypassing...");
       Rtc.SetIsWriteProtected(false);
   }
   if (!Rtc.GetIsRunning()){
-      Serial.println("RTC was not actively running, starting now");
+      //Serial.println("RTC was not actively running, starting now");
           if(debug)tft.println("[WARN] RTC wasn't actively running, starting...");
       Rtc.SetIsRunning(true);
   }
   if (Rtc.GetDateTime() < compiled) {
-      Serial.println("RTC is older than compile time!  (Updating DateTime)");
+      //Serial.println("RTC is older than compile time!  (Updating DateTime)");
           if(debug)tft.println("[ERROR] RTC is older that actual time! Updating...");
       Rtc.SetDateTime(compiled);
   }
@@ -169,7 +179,7 @@ void setup() {
   /* RFID */
   SPI.begin();
   rfid.PCD_Init();
-  rfid.PCD_DumpVersionToSerial();
+  //rfid.PCD_DumpVersionToSerial();
 
   /* Final settings*/
 
@@ -188,13 +198,84 @@ void setup() {
 }
 
 void loop() { 
+  grab_gps();
   lv_timer_handler();
+  grab_gps();
+  //if (gps.available()) Serial.write(gps.read());
+  //if (gps.available()) tgps.encode(gps.read());
+  //Serial.print("LAT=");  Serial.println(tgps.location.lat(), 6);
+  //Serial.print("LONG="); Serial.println(tgps.location.lng(), 6);
+  //Serial.print("ALT=");  Serial.println(tgps.altitude.meters());
+  grab_gps();
   if ((millis()-update_hall)>2000){ //if there is no signal for 2 seconds
     SPEED=0;
     prefs.putFloat("dist", DIST); //записываем DIST во внутреннюю память. Сделал так хитро, потому что внутренняя память не любит частой перезаписи. Также *10, чтобы сохранить десятую долю
   }
+  grab_gps();
   handle_apps();
-  delay(5);
+  grab_gps();
+  //displayInfo();
+}
+void grab_gps(){
+  if (gps.available()) {
+    char c = gps.read();
+    Serial.print(c);
+    tgps.encode(c);
+  }
+}
+
+void displayInfo()
+{
+  Serial.print(F("Location: ")); 
+  if (tgps.location.isValid())
+  {
+    Serial.print(tgps.location.lat(), 6);
+    Serial.print(F(","));
+    Serial.print(tgps.location.lng(), 6);
+  }
+  else
+  {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.print(F("  Date/Time: "));
+  if (tgps.date.isValid())
+  {
+    Serial.print(tgps.date.month());
+    Serial.print(F("/"));
+    Serial.print(tgps.date.day());
+    Serial.print(F("/"));
+    Serial.print(tgps.date.year());
+  }
+  else
+  {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.print(F(" "));
+  if (tgps.time.isValid())
+  {
+    if (tgps.time.hour() < 10) Serial.print(F("0"));
+    Serial.print(tgps.time.hour());
+    Serial.print(F(":"));
+    if (tgps.time.minute() < 10) Serial.print(F("0"));
+    Serial.print(tgps.time.minute());
+    Serial.print(F(":"));
+    if (tgps.time.second() < 10) Serial.print(F("0"));
+    Serial.print(tgps.time.second());
+    Serial.print(F("."));
+    if (tgps.time.centisecond() < 10) Serial.print(F("0"));
+    Serial.print(tgps.time.centisecond());
+  }
+  if(tgps.satellites.isValid()){
+    Serial.print(tgps.satellites.value());
+  }
+  else
+  {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.println();
 }
 
 void handle_apps(){
@@ -204,6 +285,7 @@ void handle_apps(){
     lv_arc_set_value(ui_Main_Speed_Arc, (int)floor(SPEED));
     lv_label_set_text(ui_Main_Speed_Label, String((int)floor(SPEED)).c_str());
   }
+  grab_gps();
   /* ROAD */
   if(currentScreen == ui_RoadApp){
     if((millis() - update_hall) > 500){
@@ -216,6 +298,7 @@ void handle_apps(){
       lv_label_set_text(ui_Road_Clock_Minutes, formatTime(now.Minute()).c_str());
     }
   }
+  grab_gps();
   /* SETTINGS */
   if(currentScreen == ui_SettingsApp){
     if(startcounter){
@@ -279,34 +362,28 @@ void handle_apps(){
       lv_label_set_text(ui_Set_Entry_ClearDist_Label, "Clear distance");
     }
   }
-  /* CLOCK */
-  if(currentScreen == ui_ClockApp){
-    if((millis() - update_clock) > 500){
-      update_clock = millis();
-      RtcDateTime now = Rtc.GetDateTime();
-      lv_style_t *clockStyle;
-      lv_label_set_text(ui_Clock_Label, (String(now.Hour()) + ":" + formatTime(now.Minute())).c_str());
-      if(clockMode > 4) clockMode = 0;
-      switch(clockMode){
-        case 0:
-          lv_style_set_text_font(clockStyle, &ui_font_DigitalGothic);
-          break;
-        case 1:
-          lv_style_set_text_font(clockStyle, &ui_font_TerminalGrotesque);
-          break;
-        case 2:
-          lv_style_set_text_font(clockStyle, &ui_font_Micro5);
-          break;
-        case 3:
-          lv_style_set_text_font(clockStyle, &ui_font_Hussar3D);
-          break;
-        case 4:
-          lv_style_set_text_font(clockStyle, &ui_font_Sixtyfour);
-          break;
-        default:
-          break;
-      }
+  grab_gps();
+  /* GPS */
+  if(currentScreen == ui_GPSApp){
+    String timeStr;
+    lv_label_set_text(ui_GPS_Main_Time_Value, (formatTime(tgps.time.hour()) + ":" + formatTime(tgps.time.minute()) + ":" + formatTime(tgps.time.second())).c_str());
+    lv_label_set_text(ui_GPS_Main_Sat_Value, String(tgps.satellites.value()).c_str());
+    if(tgps.satellites.value() == 0){
+      lv_obj_set_style_text_color(ui_GPS_Main_Sat_Value, lv_color_hex(0xD20000), 0); 
+      lv_label_set_text(ui_GPS_Status_Label, "WARNING"); 
+      lv_obj_set_style_text_color(ui_GPS_Status_Label, lv_color_hex(0xFFD400), 0); 
+      lv_obj_set_style_text_color(ui_GPS_Status_Icon, lv_color_hex(0xFFD400), 0); 
+      lv_label_set_text(ui_GPS_Status_Icon, LV_SYMBOL_CLOSE);
     }
+    if(tgps.satellites.value() > 0){
+      lv_obj_set_style_text_color(ui_GPS_Main_Sat_Value, lv_color_hex(0x000000), 0); 
+      lv_label_set_text(ui_GPS_Status_Label, "ALL GREAT"); 
+      lv_obj_set_style_text_color(ui_GPS_Status_Label, lv_color_hex(0x82CD47), 0); 
+      lv_obj_set_style_text_color(ui_GPS_Status_Icon, lv_color_hex(0x82CD47), 0); 
+      lv_label_set_text(ui_GPS_Status_Icon, LV_SYMBOL_OK);
+    }
+    lv_label_set_text(ui_GPS_Main_Lat_Value, String(tgps.location.lat(), 6).c_str());
+    lv_label_set_text(ui_GPS_Main_Lon_Value, String(tgps.location.lng(), 6).c_str());
   }
 }
 
@@ -362,9 +439,12 @@ void loadIcons(){
   lv_label_set_text(ui_Road_Back_Label,LV_SYMBOL_LEFT);
   lv_label_set_text(ui_Set_TopBackBtn_Label,LV_SYMBOL_RIGHT);
   lv_label_set_text(ui_Set_TopIcon,LV_SYMBOL_SETTINGS);
-  lv_label_set_text(ui_Clock_Back_Btn_Label, LV_SYMBOL_RIGHT);
-  lv_label_set_text(ui_Clock_Change_Btn_Label, LV_SYMBOL_REFRESH);
-  lv_label_set_text(ui_Clock_DarkTheme_Btn_Label, LV_SYMBOL_IMAGE);
+  lv_label_set_text(ui_GPS_Main_Lat_Icon,LV_SYMBOL_GPS);
+  lv_label_set_text(ui_GPS_Main_Lon_Icon,LV_SYMBOL_GPS);
+  lv_label_set_text(ui_GPS_Main_Sat_Icon,LV_SYMBOL_WIFI);
+  lv_label_set_text(ui_GPS_Main_Time_Icon,LV_SYMBOL_BELL);
+  lv_label_set_text(ui_GPS_Back_Btn_Label,LV_SYMBOL_UP);
+  lv_label_set_text(ui_Main_ClockApp_Icon,LV_SYMBOL_WIFI);
 }
 
 String formatTime(int num){
