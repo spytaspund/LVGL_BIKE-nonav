@@ -42,9 +42,9 @@ void timinit();
 #define I2S_BCLK          26
 #define I2S_LRC           25
 
-#define RTC_DAT           32
-#define RTC_SCLK          5
-#define RTC_RST           33
+#define RTC_DAT           26
+#define RTC_SCLK          27
+#define RTC_RST           25
 
 #define RFID_RST          16
 #define RFID_CS           17
@@ -123,7 +123,6 @@ void setup() {
 
   if(!SPIFFS.begin())
     {
-      //Serial.println("Error accessing microSD card!");
           if(debug)tft.println("[ERROR] Error accessing SPIFFS filesystem!");
       while(true); 
     }
@@ -136,7 +135,8 @@ void setup() {
   /* Configuring GPIO*/
 
   pinMode(FRONT_LIGHT_PIN, OUTPUT);
-  attachInterrupt(HALL_SENSOR_PIN, sens, RISING);
+  pinMode(HALL_SENSOR_PIN, INPUT);
+  //attachInterrupt(HALL_SENSOR_PIN, sens, RISING);     //it will be used later in loop, attachInterrupt causes some kernel panics
       if(debug)tft.println("[INIT] Initialized GPIO.");
       if(debug)tft.println('\n');
   
@@ -153,22 +153,18 @@ void setup() {
         // Common Causes:
         //    1) first time you ran and the device wasn't running yet
         //    2) the battery on the device is low or even missing
-      //Serial.println("RTC lost confidence in the DateTime!");
           if(debug)tft.println("[ERROR] RTC lost confidence in the DateTime!");
       Rtc.SetDateTime(compiled);
   }
   if (Rtc.GetIsWriteProtected()){
-      //Serial.println("RTC was write protected, enabling writing now");
           if(debug)tft.println("[WARN] RTC was write protected, bypassing...");
       Rtc.SetIsWriteProtected(false);
   }
   if (!Rtc.GetIsRunning()){
-      //Serial.println("RTC was not actively running, starting now");
           if(debug)tft.println("[WARN] RTC wasn't actively running, starting...");
       Rtc.SetIsRunning(true);
   }
   if (Rtc.GetDateTime() < compiled) {
-      //Serial.println("RTC is older than compile time!  (Updating DateTime)");
           if(debug)tft.println("[ERROR] RTC is older that actual time! Updating...");
       Rtc.SetDateTime(compiled);
   }
@@ -179,10 +175,8 @@ void setup() {
   /* RFID */
   SPI.begin();
   rfid.PCD_Init();
-  //rfid.PCD_DumpVersionToSerial();
 
   /* Final settings*/
-
       if(debug)tft.println("[CLEAN] All done. Starting ui...");
       if(debug)delay(5000);
   ui_init();
@@ -201,11 +195,7 @@ void loop() {
   grab_gps();
   lv_timer_handler();
   grab_gps();
-  //if (gps.available()) Serial.write(gps.read());
-  //if (gps.available()) tgps.encode(gps.read());
-  //Serial.print("LAT=");  Serial.println(tgps.location.lat(), 6);
-  //Serial.print("LONG="); Serial.println(tgps.location.lng(), 6);
-  //Serial.print("ALT=");  Serial.println(tgps.altitude.meters());
+  if(1700 > analogRead(35) or analogRead(35) > 2000) sens();
   grab_gps();
   if ((millis()-update_hall)>2000){ //if there is no signal for 2 seconds
     SPEED=0;
@@ -214,12 +204,11 @@ void loop() {
   grab_gps();
   handle_apps();
   grab_gps();
-  //displayInfo();
 }
 void grab_gps(){
   if (gps.available()) {
     char c = gps.read();
-    Serial.print(c);
+    //Serial.print(c);
     tgps.encode(c);
   }
 }
@@ -288,15 +277,12 @@ void handle_apps(){
   grab_gps();
   /* ROAD */
   if(currentScreen == ui_RoadApp){
-    if((millis() - update_hall) > 500){
-      update_hall = millis();
-      RtcDateTime now = Rtc.GetDateTime();
-      lv_arc_set_value(ui_Road_Speed_Arc, (int)floor(SPEED));
-      lv_label_set_text(ui_Road_Speed_Label, String((int)floor(SPEED)).c_str());
-      lv_label_set_text(ui_Road_Dist_Value, (String((int)floor(DIST)) + " km").c_str());
-      lv_label_set_text(ui_Road_Clock_Hours, String(now.Hour()).c_str());
-      lv_label_set_text(ui_Road_Clock_Minutes, formatTime(now.Minute()).c_str());
-    }
+    RtcDateTime now = Rtc.GetDateTime();
+    lv_arc_set_value(ui_Road_Speed_Arc, (int)floor(SPEED));
+    lv_label_set_text(ui_Road_Speed_Label, String((int)floor(SPEED)).c_str());
+    lv_label_set_text(ui_Road_Dist_Value, (String((int)floor(DIST)) + " km").c_str());
+    lv_label_set_text(ui_Road_Clock_Hours, String(now.Hour()).c_str());
+    lv_label_set_text(ui_Road_Clock_Minutes, formatTime(now.Minute()).c_str());
   }
   grab_gps();
   /* SETTINGS */
@@ -450,6 +436,7 @@ void loadIcons(){
 String formatTime(int num){
   if(num<10) return ("0" + String(num));
   if(num>=10) return String(num);
+  return "228"; // This needs to calm the compiler, and this beautiful number will indicate the problem if it happens.
 }
 
 void IRAM_ATTR onTimer()
