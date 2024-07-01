@@ -12,16 +12,11 @@
 // SCREEN: ui_MainApp
 void ui_MainApp_screen_init(void);
 lv_obj_t * ui_MainApp;
+lv_obj_t * ui_Main_Light2_Swt;
 lv_obj_t * ui_Main_Bat_bg;
 lv_obj_t * ui_Main_Bat_Lv;
 lv_obj_t * ui_Main_Charge_Icon;
 lv_obj_t * ui_Main_Charge_Prog;
-lv_obj_t * ui_Main_Light2;
-lv_obj_t * ui_Main_Light2_Slider;
-lv_obj_t * ui_Main_Light1;
-lv_obj_t * ui_Main_Light1_Slider;
-lv_obj_t * ui_Main_Light1_Swt;
-lv_obj_t * ui_Main_Light2_Swt;
 lv_obj_t * ui_Main_Speed;
 lv_obj_t * ui_Main_Speed_Arc;
 lv_obj_t * ui_Main_Speed_Label;
@@ -37,6 +32,10 @@ lv_obj_t * ui_Main_NaviApp_Icon;
 void ui_event_Main_ClockApp(lv_event_t * e);
 lv_obj_t * ui_Main_ClockApp;
 lv_obj_t * ui_Main_ClockApp_Icon;
+lv_obj_t * ui_Main_Light1_Swt;
+lv_obj_t * ui_Main_Clock_Widget;
+lv_obj_t * ui_Main_Clock_Label;
+lv_obj_t * ui_Main_Clock_DOW;
 
 
 // SCREEN: ui_RoadApp
@@ -83,9 +82,6 @@ lv_obj_t * ui_Set_Entry_SetWheelLen_Minus_Label;
 lv_obj_t * ui_Set_Entry_Debug;
 lv_obj_t * ui_Set_Entry_Debug_Label;
 lv_obj_t * ui_Set_Entry_Debug_Swt;
-lv_obj_t * ui_Set_Entry_Bright;
-lv_obj_t * ui_Set_Entry_Bright_Label;
-lv_obj_t * ui_Slider1;
 
 
 // SCREEN: ui_GPSApp
@@ -108,6 +104,9 @@ lv_obj_t * ui_GPS_Main_Lon_Value;
 lv_obj_t * ui_GPS_Main_Time_Icon;
 lv_obj_t * ui_GPS_Main_Time_Label;
 lv_obj_t * ui_GPS_Main_Time_Value;
+lv_obj_t * ui_GPS_Main_Record_Icon;
+lv_obj_t * ui_GPS_Main_Record_Label;
+lv_obj_t * ui_GPS_Main_Record_Value;
 lv_obj_t * ui_GPS_Status_Icon;
 lv_obj_t * ui____initial_actions0;
 

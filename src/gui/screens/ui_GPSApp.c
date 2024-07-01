@@ -148,6 +148,30 @@ void ui_GPSApp_screen_init(void)
     lv_label_set_text(ui_GPS_Main_Time_Value, "18:41:00");
     lv_obj_set_style_text_font(ui_GPS_Main_Time_Value, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_GPS_Main_Record_Icon = lv_label_create(ui_GPS_Main);
+    lv_obj_set_width(ui_GPS_Main_Record_Icon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_GPS_Main_Record_Icon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_GPS_Main_Record_Icon, 0);
+    lv_obj_set_y(ui_GPS_Main_Record_Icon, 128);
+    lv_label_set_text(ui_GPS_Main_Record_Icon, "O");
+    lv_obj_set_style_text_font(ui_GPS_Main_Record_Icon, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_GPS_Main_Record_Label = lv_label_create(ui_GPS_Main);
+    lv_obj_set_width(ui_GPS_Main_Record_Label, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_GPS_Main_Record_Label, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_GPS_Main_Record_Label, 24);
+    lv_obj_set_y(ui_GPS_Main_Record_Label, 128);
+    lv_label_set_text(ui_GPS_Main_Record_Label, "Record Time:");
+    lv_obj_set_style_text_font(ui_GPS_Main_Record_Label, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_GPS_Main_Record_Value = lv_label_create(ui_GPS_Main);
+    lv_obj_set_width(ui_GPS_Main_Record_Value, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_GPS_Main_Record_Value, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_GPS_Main_Record_Value, 136);
+    lv_obj_set_y(ui_GPS_Main_Record_Value, 128);
+    lv_label_set_text(ui_GPS_Main_Record_Value, "2 min");
+    lv_obj_set_style_text_font(ui_GPS_Main_Record_Value, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ui_GPS_Status_Icon = lv_label_create(ui_GPSApp);
     lv_obj_set_width(ui_GPS_Status_Icon, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_GPS_Status_Icon, LV_SIZE_CONTENT);    /// 1

@@ -75,7 +75,7 @@ void ui_RoadApp_screen_init(void)
     ui_Road_Dist_Label = lv_label_create(ui_Road_Dist);
     lv_obj_set_width(ui_Road_Dist_Label, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Road_Dist_Label, LV_SIZE_CONTENT);    /// 1
-    lv_label_set_text(ui_Road_Dist_Label, "Dist");
+    lv_label_set_text(ui_Road_Dist_Label, "Distance");
 
     ui_Road_Dist_Value = lv_label_create(ui_Road_Dist);
     lv_obj_set_width(ui_Road_Dist_Value, LV_SIZE_CONTENT);   /// 1

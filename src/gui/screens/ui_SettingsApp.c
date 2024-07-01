@@ -236,31 +236,6 @@ void ui_SettingsApp_screen_init(void)
     lv_obj_set_align(ui_Set_Entry_Debug_Swt, LV_ALIGN_RIGHT_MID);
 
 
-    ui_Set_Entry_Bright = lv_obj_create(ui_Set_Main);
-    lv_obj_set_width(ui_Set_Entry_Bright, 295);
-    lv_obj_set_height(ui_Set_Entry_Bright, 48);
-    lv_obj_set_x(ui_Set_Entry_Bright, 1);
-    lv_obj_set_y(ui_Set_Entry_Bright, -1);
-    lv_obj_set_align(ui_Set_Entry_Bright, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_Set_Entry_Bright, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_radius(ui_Set_Entry_Bright, 15, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Set_Entry_Bright_Label = lv_label_create(ui_Set_Entry_Bright);
-    lv_obj_set_width(ui_Set_Entry_Bright_Label, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Set_Entry_Bright_Label, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Set_Entry_Bright_Label, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(ui_Set_Entry_Bright_Label, "Brightness");
-    lv_obj_set_style_text_align(ui_Set_Entry_Bright_Label, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Set_Entry_Bright_Label, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Slider1 = lv_slider_create(ui_Set_Entry_Bright);
-    lv_slider_set_value(ui_Slider1, 0, LV_ANIM_OFF);
-    if(lv_slider_get_mode(ui_Slider1) == LV_SLIDER_MODE_RANGE) lv_slider_set_left_value(ui_Slider1, 0, LV_ANIM_OFF);
-    lv_obj_set_width(ui_Slider1, 128);
-    lv_obj_set_height(ui_Slider1, 10);
-    lv_obj_set_align(ui_Slider1, LV_ALIGN_RIGHT_MID);
-
-
     lv_obj_add_event_cb(ui_Set_TopBackBtn, ui_event_Set_TopBackBtn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Set_Entry_SetWheelLen_Plus, ui_event_Set_Entry_SetWheelLen_Plus, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Set_Entry_SetWheelLen_Minus, ui_event_Set_Entry_SetWheelLen_Minus, LV_EVENT_ALL, NULL);

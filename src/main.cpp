@@ -12,6 +12,7 @@
 #include <MFRC522.h>
 #include <TinyGPSPlus.h>
 #include <SoftwareSerial.h>
+#include "battery.h"
 
 static const uint16_t screenWidth = 320;
 static const uint16_t screenHeight = 240;
@@ -29,6 +30,7 @@ static void clear_dist(lv_event_t * e);
 static void change_debug(lv_event_t * e);
 static void change_clock(lv_event_t * e);
 String formatTime(int num);
+String getDOW(int8_t dow);
 void grab_gps();
 void displayInfo();
 void sens();
@@ -59,6 +61,8 @@ RtcDS1302<ThreeWire> Rtc(myWire);
 MFRC522 rfid(RFID_CS, RFID_RST);
 TinyGPSPlus tgps;
 SoftwareSerial gps(GPS_RX, GPS_TX); // 2 to Tx, 3 unconnected
+Battery internal_batt(36);
+Battery external_batt(39);
 
 bool light1Bool = false;
 bool debug = false;
@@ -72,7 +76,10 @@ unsigned long update_hall;
 unsigned long update_settings;
 unsigned long update_road;
 unsigned long update_clock;
+unsigned long gps_record;
+unsigned long minute_timer;
 bool startcounter = false;
+bool recordgps = true;
 int8_t clearCounter = 0;
 
 void setup() {
@@ -197,6 +204,16 @@ void loop() {
   grab_gps();
   if(1700 > analogRead(35) or analogRead(35) > 2000) sens();
   grab_gps();
+  if(recordgps){
+    if(tgps.satellites.value() == 0){
+      gps_record = millis();
+    }
+    if(tgps.satellites.value() > 0){
+      gps_record = millis();
+      recordgps = false;
+    }
+  }
+  grab_gps();
   if ((millis()-update_hall)>2000){ //if there is no signal for 2 seconds
     SPEED=0;
     prefs.putFloat("dist", DIST); //записываем DIST во внутреннюю память. Сделал так хитро, потому что внутренняя память не любит частой перезаписи. Также *10, чтобы сохранить десятую долю
@@ -271,8 +288,15 @@ void handle_apps(){
   lv_obj_t* currentScreen = lv_scr_act();
   /* MAIN */
   if(currentScreen == ui_MainApp){
+    RtcDateTime now = Rtc.GetDateTime();
     lv_arc_set_value(ui_Main_Speed_Arc, (int)floor(SPEED));
     lv_label_set_text(ui_Main_Speed_Label, String((int)floor(SPEED)).c_str());
+    lv_label_set_text(ui_Main_Clock_Label, (String(now.Hour()) + "\n" + String(formatTime(now.Minute()))).c_str());
+    lv_label_set_text(ui_Main_Clock_DOW, getDOW(now.DayOfWeek()).c_str());
+    if((millis() - minute_timer)>60000){
+      lv_label_set_text(ui_Main_Bat_Lv, String(internal_batt.getBatteryChargeLevel()).c_str());
+      lv_bar_set_value(ui_Main_Charge_Prog, internal_batt.getBatteryChargeLevel(), LV_ANIM_ON);
+    }
   }
   grab_gps();
   /* ROAD */
@@ -368,6 +392,7 @@ void handle_apps(){
       lv_obj_set_style_text_color(ui_GPS_Status_Icon, lv_color_hex(0x82CD47), 0); 
       lv_label_set_text(ui_GPS_Status_Icon, LV_SYMBOL_OK);
     }
+    lv_label_set_text(ui_GPS_Main_Record_Value, (String(gps_record / 1000 / 60) + " mins").c_str());
     lv_label_set_text(ui_GPS_Main_Lat_Value, String(tgps.location.lat(), 6).c_str());
     lv_label_set_text(ui_GPS_Main_Lon_Value, String(tgps.location.lng(), 6).c_str());
   }
@@ -431,12 +456,42 @@ void loadIcons(){
   lv_label_set_text(ui_GPS_Main_Time_Icon,LV_SYMBOL_BELL);
   lv_label_set_text(ui_GPS_Back_Btn_Label,LV_SYMBOL_UP);
   lv_label_set_text(ui_Main_ClockApp_Icon,LV_SYMBOL_WIFI);
+  lv_label_set_text(ui_GPS_Main_Record_Icon,LV_SYMBOL_BELL);
 }
 
 String formatTime(int num){
   if(num<10) return ("0" + String(num));
   if(num>=10) return String(num);
   return "228"; // This needs to calm the compiler, and this beautiful number will indicate the problem if it happens.
+}
+
+String getDOW(int8_t dow){
+  switch (dow)
+  {
+  case 1:
+    return "Ponedelnik";
+    break;
+  case 2:
+    return "Vtornik";
+    break;
+  case 3:
+    return "Sreda";
+    break;
+  case 4:
+    return "Chetverg";
+    break;
+  case 5:
+    return "Pyatnitsa";
+    break;
+  case 6:
+    return "Subbota";
+    break;
+  case 0:
+    return "Voskresenie";
+    break;
+  default:
+    break;
+  }
 }
 
 void IRAM_ATTR onTimer()
