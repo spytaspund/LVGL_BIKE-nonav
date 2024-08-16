@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include "FS.h"
-#include "SPIFFS.h"
 #include <SPI.h>
 #include <EEPROM.h>
 #include <TFT_eSPI.h> // Hardware-specific library
@@ -125,15 +123,6 @@ void setup() {
   indev_drv.read_cb = my_touchpad_read;
   lv_indev_drv_register(&indev_drv);
       if(debug)tft.println("[INIT] Registered touch driver.");
-
-  /* Initialize spiffs file system*/
-
-  if(!SPIFFS.begin())
-    {
-          if(debug)tft.println("[ERROR] Error accessing SPIFFS filesystem!");
-      while(true); 
-    }
-      if(debug)tft.println("[INIT] Initialized SPIFFS filesystem.");
   //lv_fs_stdio_init();
   DIST=prefs.getFloat("dist", 0.0);
   WHEEL_LEN=prefs.getFloat("wh-len", 2);
